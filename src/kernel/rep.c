@@ -48,6 +48,8 @@ static inline bool arch_has_clwb(void) {
   return static_cpu_has(X86_FEATURE_CLWB);
 }
 
+static const struct super_operations reportfs_sops; // All NULL
+
 static struct report_sbi *reportfs_get_sbi(void) { return g_report_sbi; }
 EXPORT_SYMBOL(reportfs_get_sbi);
 
@@ -58,7 +60,6 @@ static int reportfs_fill_super(struct super_block *sb, void *data, int silent) {
   struct dax_device *dax_dev;
   pfn_t __pfn_t;
   long size;
-  int ret;
 
   sbi = kzalloc(sizeof(struct report_sbi), GFP_KERNEL);
   if (!sbi)
@@ -75,12 +76,11 @@ static int reportfs_fill_super(struct super_block *sb, void *data, int silent) {
   sb->s_fs_info = sbi;
   sbi->sb = sb;
 
-  ret = bdev_dax_supported(sb->s_bdev, PAGE_SIZE);
-  pr_info("%s: dax_supported = %d; bdev->super=0x%p", __func__, ret,
+  pr_info("%s: bdev->super=0x%p", __func__,
           sb->s_bdev->bd_super);
-  if (!ret) {
+  if (!bdev_dax_supported(sb->s_bdev, PAGE_SIZE)) {
     pr_err("device does not support DAX\n");
-    return ret;
+    return -EINVAL;
   }
 
   sbi->s_bdev = sb->s_bdev;
@@ -119,6 +119,7 @@ static int reportfs_fill_super(struct super_block *sb, void *data, int silent) {
   root->i_atime = root->i_mtime = root->i_ctime;
   inode_init_owner(root, NULL, S_IFDIR);
 
+  sb->s_op = &reportfs_sops;
   sb->s_root = d_make_root(root);
   if (!sb->s_root) {
     pr_err("d_make_root failed\n");

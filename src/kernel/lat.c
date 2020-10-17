@@ -49,6 +49,8 @@ static const char* lattest_task_desc_op[] = {
 	"[access_size], [parallel]"
 };
 
+static const struct super_operations latencyfs_sops; // All NULL
+
 struct latency_sbi *global_sbi = NULL;
 
 uint32_t *lfs_random_array = NULL;
@@ -359,7 +361,6 @@ static int latencyfs_fill_super(struct super_block *sb, void *data, int silent)
 	struct dax_device *dax_dev;
 	pfn_t __pfn_t;
 	long size;
-	int ret = 0;
 
 	if (rep_sbi) {
 		pr_err("Already mounted\n");
@@ -374,19 +375,20 @@ static int latencyfs_fill_super(struct super_block *sb, void *data, int silent)
 	}
 
 	sbi = kzalloc(sizeof(struct latency_sbi), GFP_KERNEL);
-	if (!sbi)
+	if (!sbi) {
+		pr_err("Out of memory when allocating latency_sbi\n");
 		return -ENOMEM;
+	}
 	sb->s_fs_info = sbi;
 	sbi->sb = sb;
 	sbi->rep = rep_sbi;
 
-	ret = bdev_dax_supported(sb->s_bdev, PAGE_SIZE);
-	pr_info("%s: dax_supported = %d; bdev->super=0x%p",
-			__func__, ret, sb->s_bdev->bd_super);
-	if (!ret)
+	pr_info("%s: bdev->super=0x%p",
+			__func__, sb->s_bdev->bd_super);
+	if (!bdev_dax_supported(sb->s_bdev, PAGE_SIZE))
 	{
 		pr_err("device does not support DAX\n");
-		return ret;
+		return -EINVAL;
 	}
 
 	sbi->s_bdev = sb->s_bdev;
@@ -427,6 +429,10 @@ static int latencyfs_fill_super(struct super_block *sb, void *data, int silent)
 	root->i_atime = root->i_mtime = root->i_ctime;
 	inode_init_owner(root, NULL, S_IFDIR);
 
+	sb->s_op = &latencyfs_sops;
+	// sb->s_time_gran = 1;
+	// sb->s_export_op = NULL;
+	// sb->s_xattr = NULL;
 	sb->s_root = d_make_root(root);
 	if (!sb->s_root) {
 		pr_err("d_make_root failed\n");
@@ -435,7 +441,7 @@ static int latencyfs_fill_super(struct super_block *sb, void *data, int silent)
 
 	global_sbi = sbi;
 
-	return ret;
+	return 0;
 }
 
 static struct dentry *latencyfs_mount(struct file_system_type *fs_type,

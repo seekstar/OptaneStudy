@@ -1,0 +1,9 @@
+*.cmd
+*.a
+gen_tasks
+*.ko
+*.o
+*.order
+*.mod
+*.mod.c
+*.symvers
