@@ -345,7 +345,8 @@ int strided_bwjob(void *arg)
 	if (stride_size * count > PERTHREAD_WORKSET)
 		count = PERTHREAD_WORKSET / stride_size;
 
-	kr_info("Working set begin: %p end: %p, size=%ld, stride=%ld, delay=%ld, batch=%ld\n", buf, region_end, access_size, stride_size, delay, count);
+	// BUG: If clwb is not supported, then AEP_SUPPORTED will not be defined, then the length of lfs_stride_bw will only be 3, but here op = 3, so out of bound memory access will happen.
+	kr_info("Working set begin: %p end: %p, size=%ld, stride=%ld, delay=%ld, batch=%ld, op = %d\n", buf, region_end, access_size, stride_size, delay, count, op);
 
 	BENCHMARK_BEGIN(flags);
 
