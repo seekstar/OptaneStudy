@@ -8,7 +8,8 @@ rm -f output.txt > /dev/null
 
 size_array=( 64 128 256 512 1024 2048 4096 8192 12288 16384 20480 24576 32768 65536 131072 262144 524288 1048576 )
 #parallel_array=( 10 12 14 16 18 20 22 23 24 )
-parallel_array=( 1 )
+#parallel_array=( 1 )
+parallel_array=( $(seq $(cat /proc/cpuinfo |grep "processor"|wc -l)) )
 op_array=( 0 )
 hostname=`hostname -s`
 delay=0
