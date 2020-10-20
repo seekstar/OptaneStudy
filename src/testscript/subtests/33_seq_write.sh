@@ -10,7 +10,7 @@ size_array=( 64 128 256 512 1024 2048 4096 8192 12288 16384 20480 24576 32768 65
 #parallel_array=( 10 12 14 16 18 20 22 23 24 )
 #parallel_array=( 1 )
 parallel_array=( $(seq $(cat /proc/cpuinfo |grep "processor"|wc -l)) )
-op_array=( 0 )
+op_array=( 3 )
 hostname=`hostname -s`
 delay=0
 TAG=${TAG:-`date +%Y%m%d%H%M%S`}
@@ -49,5 +49,5 @@ for accesssize in ${size_array[@]};  do
 		done
 	done
 done
-cp -f memaccess.c.bak memaccess.c
+#cp -f memaccess.c.bak memaccess.c
 mv output.txt  ../testscript/

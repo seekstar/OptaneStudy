@@ -10,7 +10,7 @@ export AEPWatch=1
 export EMon=0
 
 export PATH=$PATH:`pwd`/subtests/bin
-testapp=./subtests/31_seq.sh
+testapp=./subtests/33_seq_write.sh
 repdev=`mount | grep ReportFS | awk {'print \$1'}`
 testdev=`mount | grep LatencyFS | awk {'print \$1'}`
 runtime=20
