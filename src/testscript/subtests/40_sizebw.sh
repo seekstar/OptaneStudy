@@ -17,7 +17,7 @@ op_array=( 3 )
 hostname=`hostname -s`
 TAG=${TAG:-`date +%Y%m%d%H%M%S`}
 
-
+cp memaccess.c memaccess.c.bak
 for bwsizebit in ${bwsizebit_array[@]};  do
         accesssize=`echo 2^$bwsizebit | bc`
 	if (( "$bwsizebit" <= "9" )); then
@@ -51,5 +51,5 @@ for bwsizebit in ${bwsizebit_array[@]};  do
 		done
 	done
 done
-cp -f memaccess.c.bak memaccess.c
+mv memaccess.c.bak memaccess.c
 mv output.txt  ../testscript/
