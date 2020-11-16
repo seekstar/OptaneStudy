@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #`sed 's/^#define SIZEBT_MACRO.*$/TEST/g'`
-
+set -e
 
 cd ../kernel
 
@@ -9,15 +9,15 @@ rm -f ../kernel/output.txt > /dev/null
 cp -f memaccess.c memaccess.c.bak
 
 #bwsizebit_array=( 6 7 8 )
-bwsizebit_array=( 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 )
+#bwsizebit_array=( 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 )
+bwsizebit_array=( 8 )
 #parallel_array=( 1 )
-parallel_array=( 1 2 3 4 6 8 )
-#op_array=( 0 )
-op_array=( 3 )
+#parallel_array=( 1 2 3 4 6 8 )
+parallel_array=( $(seq $(cat /proc/cpuinfo |grep "processor"|wc -l)) )
+op_array=( 0 )
 hostname=`hostname -s`
 TAG=${TAG:-`date +%Y%m%d%H%M%S`}
 
-cp memaccess.c memaccess.c.bak
 for bwsizebit in ${bwsizebit_array[@]};  do
         accesssize=`echo 2^$bwsizebit | bc`
 	if (( "$bwsizebit" <= "9" )); then
@@ -25,8 +25,8 @@ for bwsizebit in ${bwsizebit_array[@]};  do
 		sed -i 's/^#define SIZEBTLD_MACRO.*$/#define SIZEBTLD_MACRO SIZEBTLD_'"$accesssize"'_AVX512/g' memaccess.c
 		sed -i 's/^#define SIZEBTST_MACRO.*$/#define SIZEBTST_MACRO SIZEBTST_'"$accesssize"'_AVX512/g' memaccess.c
 		sed -i 's/^#define SIZEBTSTFLUSH_MACRO.*$/#define SIZEBTSTFLUSH_MACRO SIZEBTSTFLUSH_'"$accesssize"'_AVX512/g' memaccess.c
-		../testscript/umount.sh
-		../testscript/mount.sh $1 $2
+		sudo ../testscript/umount.sh
+		sudo ../testscript/mount.sh $1 $2
 	fi
 	for parallel in ${parallel_array[@]}; do
 		for op in ${op_array[@]}; do
@@ -53,3 +53,11 @@ for bwsizebit in ${bwsizebit_array[@]};  do
 done
 mv memaccess.c.bak memaccess.c
 mv output.txt  ../testscript/
+
+cd ../testscript
+tmpfile=$(mktemp)
+./parse_bw.py output.txt 5 1 > $tmpfile
+echo size threads throughput\(MiB/s\) > summary.txt
+awk -F , '{print $4, $3, $6}' $tmpfile >> summary.txt
+rm $tmpfile
+

@@ -2,6 +2,8 @@
 
 # Sample run script
 
+set -e
+
 # Disable CPU Prefetching
 sudo wrmsr -a 0x1a4 0xf
 
@@ -10,7 +12,7 @@ export AEPWatch=1
 export EMon=0
 
 export PATH=$PATH:`pwd`/subtests/bin
-testapp=./subtests/31_seq_ntstore.sh
+testapp=./subtests/40_sizebw.sh
 repdev=`mount | grep ReportFS | awk {'print \$1'}`
 testdev=`mount | grep LatencyFS | awk {'print \$1'}`
 runtime=20
@@ -33,8 +35,8 @@ for i in `seq $runtime`; do
   read
 
   $testapp $repdev $testdev
-  ./parse_bw.py output.txt 5 1 > $TAG.summary.txt
   mv output.txt ./$TAG.output.txt
+  mv summary.txt ./$TAG.summary.txt
 
 done
 
